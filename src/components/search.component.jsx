@@ -10,7 +10,6 @@ const SearchModal = ({ onClose }) => {
       try {
         const response = await categories(query);
         const data = response.data.data;
-        console.log(data);
         setSearchResults(data);
       } catch (error) {
         console.error("Error fetching search results:", error);
