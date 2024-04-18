@@ -7,7 +7,7 @@ const baseURLStreams = API_URL_STREAMS;
 const baseURLCategiroes = API_URL_CATEGORIES; 
 
 const commonHeaders = {
-  'Authorization': 'Bearer lnl8n4dyycogd62v1wz5hohmez88um',
+  'Authorization': 'Bearer g49fya22j6foi2kaazr9qdppy1h3xq',
   'Client-Id': 'x5yldjqwunjs1nmcq7jjjp4g72vbqp',
 };
 
