@@ -1,114 +1,98 @@
+import { useState, useEffect, useCallback } from "react";
 import { topStreams } from "../api/topStreams";
-import { useState, useEffect } from "react";
+import { StreamItemSkeleton } from "./Skeleton";
+import ErrorState from "./ErrorState";
+
+const ajustarURL = (url, width, height) => {
+  return url?.replace("{width}", width).replace("{height}", height);
+};
+
+const formatViewers = (count) => {
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return count;
+};
 
 export const SideBar = () => {
   const [streamList, setStreamList] = useState([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchStreams = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await topStreams();
+      setStreamList(response.data.data || []);
+    } catch (err) {
+      setError(err.message || "Failed to load streams");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchStreams();
-  });
+  }, [fetchStreams]);
 
-  const ajustarURL = (url, width, height) => {
-    return url.replace("{width}", width).replace("{height}", height);
-  };
-
-  const fetchStreams = async () => {
-    try {
-      const response = await topStreams();
-      setStreamList(response.data.data);
-    } catch (error) {
-      console.error("Error al obtener streams:", error);
-    }
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
   const handleClickStream = (stream) => {
-    const twitchCategoryURL = `https://www.twitch.tv/${stream.user_name}`;
-    window.location.href = twitchCategoryURL;
+    window.open(`https://www.twitch.tv/${stream.user_name}`, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <>
-      {/* This SideBar is also a Template from uiverse.io xd*/}
-      <button
-        aria-controls="default-sidebar"
-        aria-expanded={isSidebarOpen}
-        onClick={toggleSidebar}
-        className="fixed bottom-20 right-4 z-50 inline-flex items-center p-2 mt-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-      >
-        <span className="sr-only">Toggle sidebar</span>
-        <svg
-          className="w-6 h-6"
-          aria-hidden="true"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            className={
-              isSidebarOpen ? "fill-current" : "fill-current text-gray-300"
-            }
-            clipRule="evenodd"
-            fillRule="evenodd"
-            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
-          ></path>
-        </svg>
-      </button>
+    <aside
+      className="hidden sm:block w-64 shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto bg-[#18181b] border-r border-border-custom scrollbar-hide"
+      aria-label="Top streams sidebar"
+    >
+      <div className="p-4">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          Top Streams
+        </h2>
 
-      <aside
-        id="default-sidebar"
-        className={`fixed top-0 left-0 z-30 w-64 h-screen transition-transform ${
-          isSidebarOpen ? "-translate-x-full sm:translate-x-0" : "translate-x-0"
-        }`}
-        aria-label="Sidebar"
-        style={{
-          position: window.innerWidth > 640 ? "sticky" : "fixed",
-          top: 0,
-          height: "100vh",
-        }}
-      >
-        <div className="h-full px-3 py-4 overflow-y-auto bg-sidebar text-left">
-          <h1 className="text-sm font-bold text-white mb-2">Top Streams</h1>
-          <ul className="space-y-2 font-medium">
+        {isLoading ? (
+          <div className="space-y-1" role="status" aria-label="Loading streams">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <StreamItemSkeleton key={i} />
+            ))}
+          </div>
+        ) : error ? (
+          <ErrorState message={error} onRetry={fetchStreams} />
+        ) : streamList.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-8">No streams available</p>
+        ) : (
+          <ul className="space-y-1">
             {streamList.map((stream) => (
               <li key={stream.id}>
-                <div className="flex items-center">
-                  <img
-                    src={ajustarURL(stream.thumbnail_url, 100, 100)}
-                    alt={`Thumbnail de ${stream.user_name}`}
-                    className="w-10 h-10 rounded-full mr-2"
-                  />
-                  <div>
-                    <a
-                      onClick={() => handleClickStream(stream)}
-                      href="/"
-                      target="_blank"
-                    >
-                      <p className="text-sm font-medium text-white">
-                        {stream.user_name}
-                      </p>
-                    </a>
-                    <p className="text-xs text-gray-400">
-                      <span className="font-bold">{stream.game_name}</span> -{" "}
-                      <span className="font-bold">{stream.viewer_count}</span>{" "}
-                      viewers,{" "}
-                      <span className="italic">
-                        {/*Cutting stream name*/}
-                        {stream.title.length > 25
-                          ? stream.title.substring(0, 25) + "..."
-                          : stream.title}
-                      </span>
+                <button
+                  onClick={() => handleClickStream(stream)}
+                  className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/5 transition-colors text-left group"
+                  aria-label={`Watch ${stream.user_name} streaming ${stream.game_name}`}
+                >
+                  <div className="relative shrink-0">
+                    <img
+                      src={ajustarURL(stream.thumbnail_url, 100, 100)}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover"
+                      loading="lazy"
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#18181b] rounded-full" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-white truncate group-hover:text-twitch-light transition-colors">
+                      {stream.user_name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      <span className="text-red-500 font-medium">{formatViewers(stream.viewer_count)} viewers</span>
+                      <span className="mx-1">·</span>
+                      <span className="truncate">{stream.game_name}</span>
                     </p>
                   </div>
-                </div>
+                </button>
               </li>
             ))}
           </ul>
-        </div>
-      </aside>
-    </>
+        )}
+      </div>
+    </aside>
   );
 };

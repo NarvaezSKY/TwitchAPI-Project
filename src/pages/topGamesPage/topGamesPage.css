@@ -1,36 +1,65 @@
-.card {
-  width: 300px;
-  height: 480px;
-  background-color: #212121;
-  border-radius: 5px;
-  transition: border-radius cubic-bezier(0.075, 0.82, 0.165, 1) 1s,
-    transform cubic-bezier(0.075, 0.82, 0.165, 1) 1s,
-    box-shadow cubic-bezier(0.075, 0.82, 0.165, 1) 1s;
-  font-weight: bold;
-  margin-top: 5%;
+.game-card {
+  background: #1c1c1f;
+  border: 1px solid #2a2a2e;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card img {
-  border-radius: 5px;
-  margin-bottom: 9%;
+.game-card:hover {
+  background: #27272a;
+  border-color: #9146fe;
+  box-shadow: 0 0 30px rgba(145, 70, 254, 0.15);
+  transform: translateY(-2px);
 }
 
-.card:hover {
-  transform: scale(1.01);
-  box-shadow: 2px 2px 0px #191919, -5px 6px 2px #9146fe;
-  transition: 0.4s;
+.game-card:focus-visible {
+  outline: 2px solid #9146fe;
+  outline-offset: 2px;
 }
+
+.game-card-image-wrapper {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+}
+
+.game-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.game-card:hover .game-card-image {
+  transform: scale(1.08);
+}
+
+.game-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(145, 70, 254, 0.4) 0%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+}
+
+.game-card:hover .game-card-overlay {
+  opacity: 1;
+}
+
 @media (max-width: 640px) {
-  .card {
-    width: 200px;
-    height: 320px;
-    margin-top: 3%;
+  .game-card-overlay {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 60%);
   }
 
-  .card img {
-    width: 100%;
-    height: auto;
-    border-radius: 5px;
-    margin-bottom: 2%;
+  .game-card-overlay span {
+    display: none;
   }
 }
